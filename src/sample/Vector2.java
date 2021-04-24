@@ -2,6 +2,8 @@ package sample;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.transform.Affine;
+import javafx.scene.transform.Transform;
 
 public class Vector2 implements Vector {
 
@@ -28,6 +30,21 @@ public class Vector2 implements Vector {
 	}
 
 	@Override
+	public Vector getNormalized() {
+		double mag = calculateMagnitude();
+		double x = this.x / mag;
+		double y = this.y / mag;
+		return new Vector2(x, y);
+	}
+
+	@Override
+	public void normalize() {
+		double mag = calculateMagnitude();
+		this.x /= mag;
+		this.y /= mag;
+	}
+
+	@Override
 	public void setX(double x) {
 		this.x = x;
 	}
@@ -44,7 +61,7 @@ public class Vector2 implements Vector {
 
 	@Override
 	public double calculateTheta() {
-		return Math.atan(Math.toDegrees((y / x)));
+		return Math.toDegrees(Math.atan2(this.y, this.x));
 	}
 
 	@Override
@@ -55,49 +72,41 @@ public class Vector2 implements Vector {
 	}
 
 	@Override
-	public void drawToContext(GraphicsContext ctx) {
-		ctx.setStroke(color);
-		double graphicX = this.x + contextOrigin.x;
-		double graphicY = contextOrigin.y - this.y;
-		ctx.strokeLine(contextOrigin.x, contextOrigin.y, graphicX, graphicY);
-		ctx.strokeLine(graphicX, graphicY, this.x + contextOrigin.x, contextOrigin.y - this.y);
+	public double distanceTo(Vector b) {
 
-		double angle = this.calculateTheta();
-		Vector2 leftArrowTip = Vector2.polarToCartesian(angle + 45, 10);
-		Vector2 rightArrowTip = Vector2.polarToCartesian(angle - 45, 10);
-		Vector2 tipOrigin = new Vector2(graphicX, graphicY);
-
-		if (this.x < 0) {
-			if (this.y < 0) {
-				leftArrowTip.setX(Math.abs(leftArrowTip.getX()));
-				rightArrowTip.setY(rightArrowTip.getY() * -1);
-			}
-			else {
-				leftArrowTip.setX(leftArrowTip.getX() * -1);
-				rightArrowTip.setY(Math.abs(rightArrowTip.getY()));
-			}
-		}
-
-		leftArrowTip.drawToContext(ctx, tipOrigin, false);
-		rightArrowTip.drawToContext(ctx, tipOrigin, false);
+		return 0;
 	}
 
 	@Override
-	public void drawToContext(GraphicsContext ctx, Vector origin, boolean drawTip) {
-		ctx.setStroke(color);
-		double graphicX = this.x + origin.getX();
-		double graphicY = origin.getY() - this.y;
-		ctx.strokeLine(origin.getX(), origin.getY(), graphicX, graphicY);
-		ctx.strokeLine(graphicX, graphicY, this.x + origin.getX(), origin.getY() - this.y);
-		if (drawTip) {
-			double angle = this.calculateTheta();
-			Vector2 leftArrowTip = Vector2.polarToCartesian(angle + 45, 10);
-			Vector2 rightArrowTip = Vector2.polarToCartesian(angle - 45, 10);
-			Vector2 tipOrigin = new Vector2(graphicX, graphicY);
+	public void add(Vector b) {
+		this.x = this.x + b.getX();
+		this.y = this.y + b.getY();
+	}
 
-			leftArrowTip.drawToContext(ctx, tipOrigin, false);
-			rightArrowTip.drawToContext(ctx, tipOrigin, false);
-		}
+	@Override
+	public void drawToContext(GraphicsContext ctx) {
+		ctx.setFill(color);
+
+		double angle = calculateTheta();
+		double len = calculateMagnitude();
+
+		Transform transform = Transform.translate(contextOrigin.x, contextOrigin.y);
+		//angle = adjustAngle(angle);
+		transform = transform.createConcatenation(Transform.rotate(-angle, 0, 0));
+		ctx.setTransform(new Affine(transform));
+
+		ctx.strokeLine(0, 0, len, 0);
+		ctx.fillPolygon(new double[]{len, len - 8, len - 8, len}, new double[]{0, - 8, 8, 0}, 4);
+	}
+
+	@Override
+	public void drawToContext(GraphicsContext ctx, Vector origin) {
+
+	}
+
+	@Override
+	public String toString() {
+		return "(" + this.x + ", " + this.y + ")";
 	}
 
 	public static Vector2 polarToCartesian(double angle, double magnitude) {

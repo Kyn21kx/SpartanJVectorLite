@@ -9,6 +9,10 @@ public interface Vector {
 
 	double getY();
 
+	Vector getNormalized();
+
+	void normalize();
+
 	void setX(double x);
 
 	void setY(double y);
@@ -19,9 +23,13 @@ public interface Vector {
 
 	double calculateMagnitude();
 
+	double distanceTo(Vector b);
+
+	void add(Vector b);
+
 	void drawToContext(GraphicsContext ctx);
 
-	void drawToContext(GraphicsContext ctx, Vector origin, boolean drawTip);
+	void drawToContext(GraphicsContext ctx, Vector origin);
 
 	static void calibratePositions(Vector origin) {
 		Vector2.contextOrigin = (Vector2)origin;

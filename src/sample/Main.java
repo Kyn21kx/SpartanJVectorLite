@@ -16,6 +16,13 @@ public class Main extends Application {
         primaryStage.setScene(new Scene(controller, WIDTH, HEIGHT));
         primaryStage.show();
         controller.Draw();
+        /*
+        Vector2 v = new Vector2(50, 50);
+        for (int i = 0; i < 3; i++) {
+            v.setX(v.getX() * 1.654);
+            v.setY(v.getY() * 1.4);
+            v.drawToContext(controller.ctx);
+        }*/
     }
 
 
