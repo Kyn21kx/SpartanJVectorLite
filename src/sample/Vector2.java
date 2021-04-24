@@ -7,6 +7,7 @@ import javafx.scene.transform.Transform;
 
 public class Vector2 implements Vector {
 
+	public static final Vector2 ZERO = new Vector2(0, 0);
 	protected static Vector2 contextOrigin;
 
 	private double x;
@@ -72,12 +73,6 @@ public class Vector2 implements Vector {
 	}
 
 	@Override
-	public double distanceTo(Vector b) {
-
-		return 0;
-	}
-
-	@Override
 	public void add(Vector b) {
 		this.x = this.x + b.getX();
 		this.y = this.y + b.getY();
@@ -91,7 +86,6 @@ public class Vector2 implements Vector {
 		double len = calculateMagnitude();
 
 		Transform transform = Transform.translate(contextOrigin.x, contextOrigin.y);
-		//angle = adjustAngle(angle);
 		transform = transform.createConcatenation(Transform.rotate(-angle, 0, 0));
 		ctx.setTransform(new Affine(transform));
 
@@ -105,6 +99,11 @@ public class Vector2 implements Vector {
 	}
 
 	@Override
+	public String polarString() {
+		return "Magnitude = " + this.calculateMagnitude() + "; Angle = " + this.calculateTheta();
+	}
+
+	@Override
 	public String toString() {
 		return "(" + this.x + ", " + this.y + ")";
 	}
@@ -115,4 +114,10 @@ public class Vector2 implements Vector {
 		Vector2 v = new Vector2(x, y);
 		return v;
 	}
+
+	public static double distance(Vector2 a, Vector2 b) {
+		double poweredSums = Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2);
+		return Math.sqrt(poweredSums);
+	}
+
 }
