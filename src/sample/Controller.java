@@ -1,21 +1,13 @@
 package sample;
 
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Affine;
 
 import java.util.ArrayList;
@@ -30,10 +22,13 @@ public class Controller extends VBox {
 	private Canvas canvas;
 	private Button deleteButton;
 	private Button clearButton;
-	private Label cartesian, polar;
-	public GraphicsContext ctx;
+	private Button manualEntry;
+	private Label cartesian, polar, normal;
+	private ColorPicker colorPicker;
 	private ArrayList<Vector2> activeVectors;
 	private Vector2 selectedVector;
+	private GridPane controlPane;
+	public GraphicsContext ctx;
 
 	public Controller() {
 		initializeGlobals();
@@ -50,32 +45,99 @@ public class Controller extends VBox {
 		propertiesPane.setAlignment(Pos.BASELINE_LEFT);
 		propertiesPane.add(cartesian, 2, 0);
 		propertiesPane.add(polar, 2, 1);
+		propertiesPane.add(normal, 2, 2);
 		Vector2 canvasOrigin = new Vector2(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
 		Vector.calibratePositions(canvasOrigin);
 
 		setEvents();
 
-		this.getChildren().addAll(pane, canvas, propertiesPane, editButton, deleteButton, clearButton);
+		this.getChildren().addAll(pane, canvas, propertiesPane, controlPane, colorPicker);
 	}
 
 	private void initializeGlobals() {
+		controlPane = new GridPane();
 		activeVectors = new ArrayList<>();
+		colorPicker = new ColorPicker();
 		editButton = new CheckBox("Edit mode");
+		manualEntry = new Button("Change coordinates");
 		deleteButton = new Button("Delete selected vector");
 		clearButton = new Button("Clear canvas");
 		cartesian = new Label("Selected vector:");
 		polar = new Label("Polar coordinates:");
+		normal = new Label("Normal vector:");
 		canvas = new Canvas(CANVAS_WIDTH + 10, CANVAS_HEIGHT);
 		ctx = this.canvas.getGraphicsContext2D();
 
+		colorPicker.setValue(Color.BLACK);
 		cartesian.setFont(Font.font(18));
 		polar.setFont(Font.font(18));
+		normal.setFont(Font.font(18));
 		editButton.setFont(Font.font(18));
 		deleteButton.setFont(Font.font(18));
 		clearButton.setFont(Font.font(18));
+		manualEntry.setFont(Font.font(18));
+
+		controlPane.setHgap(10);
+		controlPane.setVgap(10);
+		controlPane.setAlignment(Pos.CENTER);
+
+		controlPane.add(editButton, 1, 0);
+		controlPane.add(manualEntry, 2, 0);
+		controlPane.add(deleteButton, 3, 0);
+		controlPane.add(clearButton, 4, 0);
+
+	}
+
+	private void removeSelected() {
+		if (selectedVector != null) {
+			activeVectors.remove(selectedVector);
+			selectedVector = Vector2.ZERO;
+			Draw();
+		}
+	}
+
+	private void updateLabels() {
+		if (selectedVector != null) {
+			cartesian.setText("Selected vector: " + selectedVector.toString());
+			polar.setText("Polar coordinates: " + selectedVector.polarString());
+			normal.setText("Normal vector: " + selectedVector.getNormalized().toString());
+		}
 	}
 
 	private void setEvents() {
+		manualEntry.setOnMouseClicked(event-> {
+			if (selectedVector != Vector2.ZERO && selectedVector != null) {
+				TextInputDialog td = new TextInputDialog("");
+				td.setHeaderText("Enter the x coordinate (will be clamped to fit the canvas' dimensions)");
+				String rawRes = td.showAndWait().map(r -> {
+					try {
+						Double n = Double.valueOf(r);
+						return n.toString();
+					}
+					catch(Exception err) {
+						return Double.toString(selectedVector.getX());
+					}
+				}).orElse(Double.toString(selectedVector.getX()));
+
+				double resultX = Double.parseDouble(rawRes);
+
+				TextInputDialog td2 = new TextInputDialog("");
+				td2.setHeaderText("Enter the y coordinate (will be clamped to fit the canvas' dimensions)");
+				rawRes = td.showAndWait().map(r -> {
+					try {
+						Double n = Double.valueOf(r);
+						return n.toString();
+					}
+					catch(Exception err) {
+						return Double.toString(selectedVector.getY());
+					}
+				}).orElse(Double.toString(selectedVector.getY()));
+				double resultY = Double.parseDouble(rawRes);
+				selectedVector.setX(clamp(resultX, -CANVAS_WIDTH / 2, CANVAS_WIDTH / 2));
+				selectedVector.setY(clamp(resultY, -CANVAS_HEIGHT / 2, CANVAS_HEIGHT / 2));
+				Draw();
+			}
+		});
 
 		clearButton.setOnMouseClicked(event -> {
 			activeVectors.clear();
@@ -84,17 +146,14 @@ public class Controller extends VBox {
 		});
 
 		deleteButton.setOnMouseClicked(event -> {
-			if (selectedVector != null) {
-				activeVectors.remove(selectedVector);
-				selectedVector = Vector2.ZERO;
-				Draw();
-			}
+			removeSelected();
 		});
 
 		this.setOnMouseClicked(event -> {
 			Vector2 mouseCreated = toCanvasPos(event.getSceneX(), event.getSceneY());
 			if (editButton.isSelected()) {
 				//Create a new vector, draw it, and add it to the list
+				mouseCreated.setColor(colorPicker.getValue());
 				mouseCreated.drawToContext(ctx);
 				activeVectors.add(mouseCreated);
 				selectedVector = mouseCreated;
@@ -113,8 +172,7 @@ public class Controller extends VBox {
 				}
 			}
 			if (selectedVector != null) {
-				cartesian.setText("Selected vector: " + selectedVector.toString());
-				polar.setText("Polar coordinates: " + selectedVector.polarString());
+				updateLabels();
 			}
 		});
 	}
@@ -141,6 +199,7 @@ public class Controller extends VBox {
 		for (int i = 0; i < activeVectors.size(); i++) {
 			activeVectors.get(i).drawToContext(ctx);
 		}
+		updateLabels();
 	}
 
 	private void DrawCartesianPlane() {

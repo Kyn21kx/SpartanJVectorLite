@@ -25,9 +25,9 @@ public interface Vector {
 
 	void add(Vector b);
 
-	void drawToContext(GraphicsContext ctx);
+	double dot(Vector v);
 
-	void drawToContext(GraphicsContext ctx, Vector origin);
+	void drawToContext(GraphicsContext ctx);
 
 	String polarString();
 

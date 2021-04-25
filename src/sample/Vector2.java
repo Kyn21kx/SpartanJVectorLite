@@ -79,6 +79,11 @@ public class Vector2 implements Vector {
 	}
 
 	@Override
+	public double dot(Vector v) {
+		return this.x * v.getX() + this.y * v.getY();
+	}
+
+	@Override
 	public void drawToContext(GraphicsContext ctx) {
 		ctx.setFill(color);
 
@@ -94,11 +99,6 @@ public class Vector2 implements Vector {
 	}
 
 	@Override
-	public void drawToContext(GraphicsContext ctx, Vector origin) {
-
-	}
-
-	@Override
 	public String polarString() {
 		return "Magnitude = " + this.calculateMagnitude() + "; Angle = " + this.calculateTheta();
 	}
@@ -109,8 +109,8 @@ public class Vector2 implements Vector {
 	}
 
 	public static Vector2 polarToCartesian(double angle, double magnitude) {
-		double x = magnitude * Math.cos(Math.toDegrees(angle));
-		double y = magnitude * Math.sin(Math.toDegrees(angle));
+		double x = magnitude * Math.toDegrees(Math.cos(angle));
+		double y = magnitude * Math.toDegrees(Math.sin(angle));
 		Vector2 v = new Vector2(x, y);
 		return v;
 	}
