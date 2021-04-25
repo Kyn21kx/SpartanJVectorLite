@@ -11,6 +11,7 @@ import javafx.scene.text.Font;
 import javafx.scene.transform.Affine;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Controller extends VBox {
 
@@ -23,14 +24,17 @@ public class Controller extends VBox {
 	private Button deleteButton;
 	private Button clearButton;
 	private Button manualEntry;
+	private Button findButton;
 	private Label cartesian, polar, normal;
 	private ColorPicker colorPicker;
 	private ArrayList<Vector2> activeVectors;
 	private Vector2 selectedVector;
 	private GridPane controlPane;
+	private MenuBar menuBar;
 	public GraphicsContext ctx;
 
 	public Controller() {
+		initializeMenuBar();
 		initializeGlobals();
 		GridPane pane = new GridPane();
 		pane.setAlignment(Pos.CENTER);
@@ -51,7 +55,30 @@ public class Controller extends VBox {
 
 		setEvents();
 
-		this.getChildren().addAll(pane, canvas, propertiesPane, controlPane, colorPicker);
+		this.getChildren().addAll(menuBar, pane, canvas, propertiesPane, controlPane, colorPicker);
+	}
+
+	private void initializeMenuBar() {
+		Menu fileMenu = new Menu("File");
+		MenuItem saveItem = new MenuItem("Save");
+		saveItem.setOnAction(event -> {
+			DataManager.saveToFile(activeVectors.toArray(new Vector2[0]));
+		});
+		MenuItem loadItem = new MenuItem("Load");
+		//Controller selfRef = this;
+		loadItem.setOnAction(event -> {
+			Stack<Vector> data = DataManager.loadFile();
+			if (data == null) return;
+			activeVectors.clear();
+			selectedVector = Vector2.ZERO;
+			while(data.GetSize() > 0) {
+				activeVectors.add((Vector2)data.Pop());
+		 	}
+			Draw();
+
+		});
+		fileMenu.getItems().addAll(saveItem, loadItem);
+		menuBar = new MenuBar(fileMenu);
 	}
 
 	private void initializeGlobals() {
@@ -59,6 +86,7 @@ public class Controller extends VBox {
 		activeVectors = new ArrayList<>();
 		colorPicker = new ColorPicker();
 		editButton = new CheckBox("Edit mode");
+		findButton = new Button("Select a vector by its coordinates");
 		manualEntry = new Button("Change coordinates");
 		deleteButton = new Button("Delete selected vector");
 		clearButton = new Button("Clear canvas");
@@ -76,6 +104,7 @@ public class Controller extends VBox {
 		deleteButton.setFont(Font.font(18));
 		clearButton.setFont(Font.font(18));
 		manualEntry.setFont(Font.font(18));
+		findButton.setFont(Font.font(18));
 
 		controlPane.setHgap(10);
 		controlPane.setVgap(10);
@@ -85,7 +114,7 @@ public class Controller extends VBox {
 		controlPane.add(manualEntry, 2, 0);
 		controlPane.add(deleteButton, 3, 0);
 		controlPane.add(clearButton, 4, 0);
-
+		controlPane.add(findButton, 5, 0);
 	}
 
 	private void removeSelected() {
@@ -105,36 +134,43 @@ public class Controller extends VBox {
 	}
 
 	private void setEvents() {
+		findButton.setOnMouseClicked(event -> {
+			//Here we'll prompt to select the vector
+			InputPrompt promptX = new InputPrompt(selectedVector.getX(), "",
+					"Enter the X coordinate (will be clamped to fit the canvas' dimensions)");
+			InputPrompt promptY = new InputPrompt(selectedVector.getX(), "",
+					"Enter the Y coordinate (will be clamped to fit the canvas' dimensions)");
+			Vector2 target;
+			{
+				double resultX = promptX.showAndReturn();
+				double resultY = promptY.showAndReturn();
+				target = new Vector2(resultX, resultY);
+			}
+			Vector2[] arr = activeVectors.toArray(new Vector2[0]);
+			int pos = DataManager.interpolationSearch(arr, 0, arr.length - 1, target, new VectorComparator());
+			System.out.println(pos);
+			if (pos != -1) {
+				selectedVector = activeVectors.get(pos);
+				updateLabels();
+			}
+			else
+				System.out.println("Error, not found!");
+		});
+
 		manualEntry.setOnMouseClicked(event-> {
 			if (selectedVector != Vector2.ZERO && selectedVector != null) {
-				TextInputDialog td = new TextInputDialog("");
-				td.setHeaderText("Enter the x coordinate (will be clamped to fit the canvas' dimensions)");
-				String rawRes = td.showAndWait().map(r -> {
-					try {
-						Double n = Double.valueOf(r);
-						return n.toString();
-					}
-					catch(Exception err) {
-						return Double.toString(selectedVector.getX());
-					}
-				}).orElse(Double.toString(selectedVector.getX()));
-
-				double resultX = Double.parseDouble(rawRes);
-
-				TextInputDialog td2 = new TextInputDialog("");
-				td2.setHeaderText("Enter the y coordinate (will be clamped to fit the canvas' dimensions)");
-				rawRes = td.showAndWait().map(r -> {
-					try {
-						Double n = Double.valueOf(r);
-						return n.toString();
-					}
-					catch(Exception err) {
-						return Double.toString(selectedVector.getY());
-					}
-				}).orElse(Double.toString(selectedVector.getY()));
-				double resultY = Double.parseDouble(rawRes);
+				InputPrompt promptX = new InputPrompt(selectedVector.getX(), "",
+						"Enter the X coordinate (will be clamped to fit the canvas' dimensions)");
+				InputPrompt promptY = new InputPrompt(selectedVector.getX(), "",
+						"Enter the Y coordinate (will be clamped to fit the canvas' dimensions)");
+				double resultX = promptX.showAndReturn();
+				double resultY = promptY.showAndReturn();
 				selectedVector.setX(clamp(resultX, -CANVAS_WIDTH / 2, CANVAS_WIDTH / 2));
 				selectedVector.setY(clamp(resultY, -CANVAS_HEIGHT / 2, CANVAS_HEIGHT / 2));
+
+				Vector2[] arr = activeVectors.toArray(new Vector2[0]);
+				DataManager.insertionSort(arr, new VectorComparator());
+				activeVectors = new ArrayList<>(Arrays.asList(arr));
 				Draw();
 			}
 		});
@@ -156,6 +192,9 @@ public class Controller extends VBox {
 				mouseCreated.setColor(colorPicker.getValue());
 				mouseCreated.drawToContext(ctx);
 				activeVectors.add(mouseCreated);
+				Vector2[] arr = activeVectors.toArray(new Vector2[0]);
+				DataManager.insertionSort(arr, new VectorComparator());
+				activeVectors = new ArrayList<>(Arrays.asList(arr));
 				selectedVector = mouseCreated;
 			}
 			else {

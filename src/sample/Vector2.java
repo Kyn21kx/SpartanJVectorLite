@@ -108,6 +108,12 @@ public class Vector2 implements Vector {
 		return "(" + this.x + ", " + this.y + ")";
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		Vector2 o = (Vector2)obj;
+		return this.x == o.x && this.y == o.y;
+	}
+
 	public static Vector2 polarToCartesian(double angle, double magnitude) {
 		double x = magnitude * Math.toDegrees(Math.cos(angle));
 		double y = magnitude * Math.toDegrees(Math.sin(angle));
@@ -118,6 +124,16 @@ public class Vector2 implements Vector {
 	public static double distance(Vector2 a, Vector2 b) {
 		double poweredSums = Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2);
 		return Math.sqrt(poweredSums);
+	}
+
+	public static Vector2 parse(String s) throws Exception {
+		StringBuilder aux = new StringBuilder(s);
+		//Delete parenthesis
+		aux.deleteCharAt(aux.length() - 1);
+		aux.deleteCharAt(0);
+		//Split
+		String[] data = aux.toString().split(", ");
+		return new Vector2(Double.parseDouble(data[0]), Double.parseDouble(data[1]));
 	}
 
 }
