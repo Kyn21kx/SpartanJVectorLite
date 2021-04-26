@@ -61,6 +61,11 @@ public class Vector2 implements Vector {
 	}
 
 	@Override
+	public Color getColor() {
+		return this.color;
+	}
+
+	@Override
 	public double calculateTheta() {
 		return Math.toDegrees(Math.atan2(this.y, this.x));
 	}
@@ -127,13 +132,28 @@ public class Vector2 implements Vector {
 	}
 
 	public static Vector2 parse(String s) throws Exception {
-		StringBuilder aux = new StringBuilder(s);
+		String[] parts = s.split("\t");
+		StringBuilder aux = new StringBuilder(parts[0]);
 		//Delete parenthesis
 		aux.deleteCharAt(aux.length() - 1);
 		aux.deleteCharAt(0);
 		//Split
 		String[] data = aux.toString().split(", ");
-		return new Vector2(Double.parseDouble(data[0]), Double.parseDouble(data[1]));
+		Vector2 v = new Vector2(Double.parseDouble(data[0]), Double.parseDouble(data[1]));
+		Color c = hex2Rgb(parts[1]);
+		v.setColor(c);
+		return v;
+	}
+
+	private static Color hex2Rgb(String colorStr) {
+		StringBuilder aux = new StringBuilder(colorStr);
+		aux.delete(0, 1);
+		colorStr = aux.toString();
+		double r = Integer.valueOf(colorStr.substring(1, 3), 16);
+		double g = Integer.valueOf(colorStr.substring(3, 5), 16);
+		double b = Integer.valueOf(colorStr.substring(5, 7), 16);
+		Color color = new Color(r / 255f, g / 255f, b / 255f, 1);
+		return color;
 	}
 
 }

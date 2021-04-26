@@ -20,11 +20,13 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        //Entry point of the application
         st = primaryStage;
         Controller controller = new Controller();
         primaryStage.setTitle("Vector visualizer");
         primaryStage.setScene(new Scene(controller, WIDTH, HEIGHT));
         primaryStage.show();
+        //Vector drawing function
         controller.Draw();
     }
 

@@ -27,10 +27,11 @@ public class Controller extends VBox {
 	private Button findButton;
 	private Label cartesian, polar, normal;
 	private ColorPicker colorPicker;
-	private ArrayList<Vector2> activeVectors;
-	private Vector2 selectedVector;
-	private GridPane controlPane;
 	private MenuBar menuBar;
+	private GridPane controlPane;
+
+	private Vector2 selectedVector;
+	private ArrayList<Vector2> activeVectors;
 	public GraphicsContext ctx;
 
 	public Controller() {
@@ -70,12 +71,11 @@ public class Controller extends VBox {
 			Stack<Vector> data = DataManager.loadFile();
 			if (data == null) return;
 			activeVectors.clear();
-			selectedVector = Vector2.ZERO;
+			selectedVector = Vector2.ZERO; //(0, 0)
 			while(data.GetSize() > 0) {
 				activeVectors.add((Vector2)data.Pop());
 		 	}
 			Draw();
-
 		});
 		fileMenu.getItems().addAll(saveItem, loadItem);
 		menuBar = new MenuBar(fileMenu);

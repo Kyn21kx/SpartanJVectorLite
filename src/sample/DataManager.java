@@ -20,7 +20,7 @@ public class DataManager {
 			FileWriter writer = new FileWriter(file);
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < data.length; i++) {
-				sb.append(data[i].toString() + "\n");
+				sb.append(data[i].toString() + "\t" + data[i].getColor().toString() + "\n");
 			}
 			writer.write(sb.toString());
 			writer.close();
@@ -28,13 +28,14 @@ public class DataManager {
 			a.setTitle("Success!");
 			a.setHeaderText("File saved successfully");
 			a.setContentText("Saved under: " + file.getAbsolutePath());
-
+			a.show();
 		}
 		catch(Exception err) {
 			Alert a = new Alert(Alert.AlertType.ERROR);
 			a.setTitle("File error!");
 			a.setHeaderText("There's been an error");
 			a.setContentText(err.getMessage());
+			a.show();
 		}
 
 	}
@@ -58,6 +59,7 @@ public class DataManager {
 			a.setTitle("Error!");
 			a.setHeaderText("There's been an error");
 			a.setContentText(err.getMessage());
+			a.show();
 			return null;
 		}
 	}

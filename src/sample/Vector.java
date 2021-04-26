@@ -19,6 +19,8 @@ public interface Vector {
 
 	void setColor(Color color);
 
+	Color getColor();
+
 	double calculateTheta();
 
 	double calculateMagnitude();
